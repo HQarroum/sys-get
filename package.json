@@ -1,0 +1,39 @@
+{
+  "name": "sys-get",
+  "version": "1.0.0",
+  "description": "A portable system information provider CLI tool.",
+  "main": "index.js",
+  "bin": {
+    "sys-get": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HQarroum/sys-get.git"
+  },
+  "keywords": [
+    "system",
+    "information",
+    "cli"
+  ],
+  "author": "Halim Qarroum <hqm.post@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HQarroum/sys-get/issues"
+  },
+  "homepage": "https://github.com/HQarroum/sys-get#readme",
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "cli-progress": "^1.8.0",
+    "commander": "^2.15.1",
+    "moment": "^2.22.1",
+    "osx-temperature-sensor": "^1.0.1",
+    "pretty-bytes": "^5.0.0",
+    "progress": "^2.0.0",
+    "systeminformation": "^3.40.0",
+    "terminal-kit": "^1.15.1"
+  }
+}
