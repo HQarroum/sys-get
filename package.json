@@ -30,7 +30,6 @@
     "cli-progress": "^1.8.0",
     "commander": "^2.15.1",
     "moment": "^2.22.1",
-    "osx-temperature-sensor": "^1.0.1",
     "pretty-bytes": "^5.0.0",
     "progress": "^2.0.0",
     "systeminformation": "^3.40.0",

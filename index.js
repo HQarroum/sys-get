@@ -58,7 +58,7 @@ const display = (list) => {
       if (commands.indexOf(command) < 0) return;
       const provider = require(`./lib/${command}`);
       if (provider.get) {
-        array.push(provider.get().then((res) => ({ res, command })));
+        array.push(provider.get().then((res) => ({ res, command })).catch((err) => console.log(`Error : ${err}`)));
       }
     });
   };
