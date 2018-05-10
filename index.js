@@ -34,15 +34,6 @@ program
 const rate = program.refreshRate || (2 * 1000);
 
 /**
- * Exits the application by displaying the
- * program usage.
- */
-const fail = () => {
-  program.outputHelp();
-  process.exit(-1);
-};
-
-/**
  * Building the `commands` array.
  */
 fs.readdirSync('./lib').forEach((file) => commands.push(file.replace(/\.[^/.]+$/, '')));
