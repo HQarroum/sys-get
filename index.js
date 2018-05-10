@@ -88,7 +88,13 @@ display(argument).then(() => {
   // Showing real-time information in case the `live`
   // argument is specified.
   if (program.live) {
-    term.clear().hideCursor();
+    term
+      .clear()
+      .hideCursor()
+      .grabInput({ mouse: 'button' })
+      .on('key', (name, matches, data) => {
+        process.kill(process.pid, 'SIGINT');
+      });
     setTimeout(tick, rate);
   }
 });
