@@ -24,6 +24,17 @@
   "bugs": {
     "url": "https://github.com/HQarroum/sys-get/issues"
   },
+  "os": [
+    "darwin",
+    "linux",
+    "win32",
+    "freebsd",
+    "openbsd",
+    "sunos"
+  ],
+  "optionalDependencies": {
+    "osx-temperature-sensor": "^1.0.1"
+  },
   "homepage": "https://github.com/HQarroum/sys-get#readme",
   "dependencies": {
     "chalk": "^2.4.1",
