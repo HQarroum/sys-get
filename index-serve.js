@@ -7,8 +7,10 @@ const system      = require('./lib');
  * Command-line interface.
  */
 program
-  .option('-n, --namespace [namespace]', 'The IPC namespace to use.')
-  .option('-b, --endpoint [endpoint]', 'The IPC endpoint to use.')
+  .option('-e, --use-expressify [transport]', 'Use Expressify to communicate over an Expressify transport (mqtt and ipc currently supported).')
+  .option('-n, --namespace [namespace]', 'The Expressify IPC namespace to use.')
+  .option('-b, --endpoint [endpoint]', 'The Expressify IPC endpoint to use.')
+  .option('-m, --mqtt-opts [path]', 'Path to an Expressify MQTT configuration file.')
   .parse(process.argv);
 
 /**
@@ -39,6 +41,14 @@ const server = new Expressify.Server({
  */
 server.get('/system/processes', (req, res) => {
   system.processes.get().then((r) => res.send(r));
+});
+
+/**
+ * Retrieves and returns informations about the
+ * graphics system.
+ */
+server.get('/system/graphics', (req, res) => {
+  system.graphics.get().then((r) => res.send(r));
 });
 
 /**
