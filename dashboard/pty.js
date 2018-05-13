@@ -14,6 +14,8 @@ class Pty extends EventEmitter {
     super();
     // Concrete PTY implementation.
     this.impl = impl;
+    // Subscribing to events.
+    this.impl.on('data', (data) => this.emit('data', data));
   }
 
   /**
@@ -26,15 +28,28 @@ class Pty extends EventEmitter {
 
   /**
    * Resizes the terminal.
-   * @param {*} width 
-   * @param {*} height 
+   * @param {*} width the width of the terminal.
+   * @param {*} height the height of the terminal.
    */
   resize(width, height) {
     return (this.impl.resize(width, height));
   }
 
+  /**
+   * Destroys the terminal.
+   */
   destroy() {
     return (this.impl.destroy());
+  }
+
+  /**
+   * Creates a new PTY.
+   * @param {*} shell the `shell` to use.
+   * @param {*} args the arguments to pass to the shell.
+   * @param {*} options the options to pass to the terminal.
+   */
+  static fork(shell, args, options) {
+    return (impl.fork(shell, args, options));
   }
 };
 

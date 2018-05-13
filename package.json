@@ -37,6 +37,7 @@
   },
   "homepage": "https://github.com/HQarroum/sys-get#readme",
   "dependencies": {
+    "aws-iot-device-sdk": "^2.2.1",
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.8.5",
     "chalk": "^2.4.1",
@@ -49,6 +50,8 @@
     "pretty-bytes": "^5.0.0",
     "progress": "^2.0.0",
     "systeminformation": "^3.40.0",
-    "xterm": "^3.3.0"
+    "terminal-kit": "^1.15.5",
+    "timed-cache": "^1.1.0",
+    "xterm": "2.8.1"
   }
 }

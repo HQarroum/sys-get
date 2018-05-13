@@ -6,26 +6,28 @@ const layout  = require('./dashboard/terminal-layout');
 const system  = require('./lib');
 const XTerm   = require('./dashboard/blessed-xterm');
 
+/**
+ * Command-line interface.
+ */
+program
+  .option('-r, --refresh-rate <rate>', 'The refresh rate at which the data are updated.')
+  .option('-e, --use-expressify <transport>', 'Use Expressify to communicate over an Expressify transport (mqtt and ipc currently supported).')
+  .option('-n, --namespace <namespace>', 'The Expressify IPC namespace to use.')
+  .option('-b, --endpoint <endpoint>', 'The Expressify IPC endpoint to use.')
+  .option('-m, --mqtt-opts <path>', 'Path to an Expressify MQTT configuration file.')
+  .parse(process.argv);
+
+program.useExpressify = 'mqtt';
+program.mqttOpts = 'common/config.json';
+
 // Creating a new screen instance.
 const screen = blessed.screen();
 
 // Creating a new grid on the screen.
 const grid = new contrib.grid({ rows: 12, cols: 12, screen });
 
-/**
- * Command-line interface.
- */
-program
-  .option('-r, --refresh-rate [rate]', 'The refresh rate at which the data are updated.')
-  .option('-e, --use-expressify [transport]', 'Use Expressify to communicate over an Expressify transport (mqtt and ipc currently supported).')
-  .option('-n, --namespace [namespace]', 'The Expressify IPC namespace to use.')
-  .option('-b, --endpoint [endpoint]', 'The Expressify IPC endpoint to use.')
-  .option('-m, --mqtt-opts [path]', 'Path to an Expressify MQTT configuration file.')
-  .parse(process.argv);
-
-
-// Instanciating the system retriever.
-const retriever = system.factory(program);
+// Instanciating the client.
+const client = system.factory(program);
 
 /**
  * The application refresh rate.
@@ -37,6 +39,28 @@ const rate = program.refreshRate || (2 * 1000);
  */
 const tx = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 const rx = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
+// Terminal options.
+let opts = {
+  shell:         process.env.SHELL || "sh",
+  args:          [],
+  env:           process.env,
+  cwd:           process.cwd(),
+  cursorType:    "block",
+  border:        "line",
+  scrollback:    1000,
+  style: {
+    fg:        "default",
+    bg:        "default",
+    border:    { fg: "default" },
+    focus:     { border: { fg: "green" } },
+    scrolling: { border: { fg: "red" } }
+  }
+};
+
+// Terminal hint.
+let hint = "\r\nWelcome in the remote shell.\r\n" +
+    "Press Q to exit the application.\r\n\r\n";
 
 // Storage donut layout.
 const donut = grid.set(8, 8, 4, 2, contrib.donut, 
@@ -98,37 +122,6 @@ const transactionsLine = grid.set(0, 0, 6, 6, contrib.line,
   , label: 'System Statistics'
   , showLegend: true
   , legend: {width: 12}});
-
-  let opts = {
-    shell:         process.env.SHELL || "sh",
-    args:          [],
-    env:           process.env,
-    cwd:           process.cwd(),
-    cursorType:    "block",
-    border:        "line",
-    scrollback:    1000,
-    style: {
-        fg:        "default",
-        bg:        "default",
-        border:    { fg: "default" },
-        focus:     { border: { fg: "green" } },
-        scrolling: { border: { fg: "red" } }
-    }
-};
-
-let terminal = new XTerm(Object.assign({}, opts, {
-  left:    0,
-  top:     31,
-  width:   Math.floor(screen.width / 2),
-  height:  30,
-  label:   "Remote Terminal"
-}));
-
-let hint = "\r\nWelcome in the remote shell.\r\n" +
-    "Press Q to exit the application.\r\n\r\n"
-terminal.write(hint)
-terminal.focus();
-screen.append(terminal);
 
 // Log layout.
 const log = grid.set(8, 6, 4, 2, contrib.log, {
@@ -313,9 +306,9 @@ const refreshSystemState = (cpu, memory, processes) => {
   // Updating the graph data.
   setLineData([cpuLine, memoryLine, processesLine], transactionsLine);
 };
- 
+
 // Loading system information.
-const refresh = () => retriever.all().then((results) => {
+const refresh = () => client.all().then((results) => {
   let cpu, memory, processes = null;
   results.forEach((o, idx) => {
     if (o.command === 'cpu') {
@@ -336,9 +329,35 @@ const refresh = () => retriever.all().then((results) => {
   screen.render();
 });
 
-// Triggering immediate `refresh` and scheduling
-// subsequent refresh operations.
-refresh().then(() => setInterval(refresh, rate));
+console.log('[+] Connecting to the dashboard ...');
+// Preparing the client.
+client.prepare()
+  .then(() => {
+    // Creating a new terminal.
+    const terminal = new XTerm(Object.assign({}, opts, {
+      left:    0,
+      top:     31,
+      width:   Math.floor(screen.width / 2),
+      height:  30,
+      label:   "Remote Terminal",
+      ptyInstance: client.pty()
+    }));
+
+    // Waiting for the `ready` event.
+    terminal.once('ready', () => {
+      terminal.write(hint)
+      terminal.focus();
+      screen.append(terminal);
+    });
+
+    // Triggering immediate `refresh` and scheduling
+    // subsequent refresh operations.
+    return (refresh().then(() => setInterval(refresh, rate)));
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(-1);
+  });
 
 //set line charts dummy data
 

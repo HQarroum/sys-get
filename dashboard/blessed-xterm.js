@@ -41,12 +41,13 @@ const XTermJS = require("xterm")
 class XTerm extends blessed.Box {
     /*  construct the API class  */
     constructor (options = {}) {
+        
+        let ptyInstance_ = options.ptyInstance
+
         /*  clone options or all widget instances will show
             at least the same style, etc.  */
         options = clone(options)
 
-        /* Set the optional `ptyInstance` instance. */
-        this.ptyInstance = options.ptyInstance
 
         /*  disable the special "scrollable" feature of Blessed's Element
             which would use a ScrolledBox instead of a Box under the surface  */
@@ -54,6 +55,9 @@ class XTerm extends blessed.Box {
 
         /*  pass-through options to underlying Blessed Box element  */
         super(options)
+
+        /* Set the optional `ptyInstance` instance. */
+        this.ptyInstance = ptyInstance_;
 
         /*  helper function for setting options  */
         const setOption = (cfg, name, def) => {
@@ -515,6 +519,7 @@ class XTerm extends blessed.Box {
         this.pty.on("exit", (code) => {
             this.emit("exit", code || 0)
         })
+        this.pty.on('ready', () => this.emit('ready'));
     }
 
     /*  terminate shell command on Pty  */
