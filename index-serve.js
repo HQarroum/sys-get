@@ -250,7 +250,7 @@ try {
 process.on('SIGINT', () => {
   console.log('[+] Closing the server ...');
   // Destroying all the PTYs.
-  Object.keys(ptys).forEach((pty) => pty.destroy());
+  Object.keys(ptys).forEach((pty) => pty.destroy && pty.destroy());
   // Clears all created intervals.
   intervals && intervals.forEach((i) => clearInterval(i));
   // Closing the connection.

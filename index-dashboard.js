@@ -1,4 +1,5 @@
 const program = require('commander');
+const os      = require('os');
 const pb      = require('pretty-bytes');
 const blessed = require('blessed');
 const contrib = require('blessed-contrib');
@@ -26,7 +27,7 @@ const rx = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 
 // Terminal options.
 let opts = {
-  shell:         process.env.SHELL || "sh",
+  shell:         process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe' : 'sh'),
   args:          [],
   env:           process.env,
   cwd:           process.cwd(),
