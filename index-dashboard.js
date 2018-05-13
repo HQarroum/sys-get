@@ -6,20 +6,6 @@ const layout  = require('./dashboard/terminal-layout');
 const system  = require('./lib');
 const XTerm   = require('./dashboard/blessed-xterm');
 
-/**
- * Command-line interface.
- */
-program
-  .option('-r, --refresh-rate <rate>', 'The refresh rate at which the data are updated.')
-  .option('-e, --use-expressify <transport>', 'Use Expressify to communicate over an Expressify transport (mqtt and ipc currently supported).')
-  .option('-n, --namespace <namespace>', 'The Expressify IPC namespace to use.')
-  .option('-b, --endpoint <endpoint>', 'The Expressify IPC endpoint to use.')
-  .option('-m, --mqtt-opts <path>', 'Path to an Expressify MQTT configuration file.')
-  .parse(process.argv);
-
-program.useExpressify = 'mqtt';
-program.mqttOpts = 'common/config.json';
-
 // Creating a new screen instance.
 const screen = blessed.screen();
 
@@ -29,9 +15,7 @@ const grid = new contrib.grid({ rows: 12, cols: 12, screen });
 // Instanciating the client.
 const client = system.factory(program);
 
-/**
- * The application refresh rate.
- */
+// The application refresh rate.
 const rate = program.refreshRate || (2 * 1000);
 
 /**

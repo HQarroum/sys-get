@@ -10,18 +10,8 @@ let instance       = null;
 // Pty instances.
 const ptys = {};
 
-/**
- * Command-line interface.
- */
-program
-  .option('-e, --use-expressify <transport>', 'Use Expressify to communicate over an Expressify transport (mqtt and ipc currently supported).')
-  .option('-n, --namespace <namespace>', 'The Expressify IPC namespace to use.')
-  .option('-b, --endpoint <endpoint>', 'The Expressify IPC endpoint to use.')
-  .option('-m, --mqtt-opts <path>', 'Path to an Expressify MQTT configuration file.')
-  .parse(process.argv);
-
-  program.useExpressify = 'mqtt';
-  program.mqttOpts = 'common/config.json';
+// Setting `ipc` as the default expressify method.
+if (!program.useExpressify) program.useExpressify = 'ipc';
 
 /**
  * The domains we are notifying the client about.
@@ -34,6 +24,11 @@ const domains = [
   'memory',
   'network'
 ];
+
+/**
+ * The updates refresh rate.
+ */
+const rate = program.refreshRate || (15 * 1000);
 
 /**
  * Initiates an MQTT connection.
@@ -54,8 +49,8 @@ const factory = {
   createipc: function (program) {
     return Promise.resolve(new Expressify.Server({
       strategy: new IpcStrategy({
-        endpoint: program.endpoint || 'monitoring.server',
-        namespace: program.namespace || 'system'
+        endpoint: program.endpoint,
+        namespace: program.namespace
       })
     }));
   },
@@ -246,7 +241,7 @@ try {
     .call(this, program)
     .then(start);
 } catch (e) {
-  return Promise.reject(`Expressify method ${this.program.useExpressify} is not supported`);
+  return Promise.reject(`Expressify method ${program.useExpressify} is not supported`);
 }
 
 /**

@@ -19,9 +19,10 @@ program
   .version(version)
   .name(name)
   .description(description)
+  .option('-r, --refresh-rate <rate>', 'The refresh rate at which the data are updated.')
   .option('-e, --use-expressify <transport>', 'Use Expressify to communicate over an Expressify transport (mqtt and ipc currently supported).')
-  .option('-n, --namespace <namespace>', 'The Expressify IPC namespace to use.')
-  .option('-b, --endpoint <endpoint>', 'The Expressify IPC endpoint to use.')
+  .option('-n, --namespace <namespace>', 'The Expressify IPC namespace to use.', 'system')
+  .option('-b, --endpoint <endpoint>', 'The Expressify IPC endpoint to use.', 'monitoring.server')
   .option('-m, --mqtt-opts <path>', 'Path to an Expressify MQTT configuration file.')
   .option('all', 'Displays all the system information.')
   .option('cpu', 'Displays information about the system CPU.')
@@ -31,17 +32,21 @@ program
   .option('graphics', 'Displays information on the graphic system (Graphic Cards and Displays).')
   .option('processes', 'Displays information on the currently running processes.')
   .option('storage', 'Display information on the storage devices.')
-  .command('dashboard', 'Display a live dashboard of the system information.')
-  .command('serve [namespace] [endpoint]', 'Serves system information on a local IPC interface.')
+  .option('dashboard', 'Display a live dashboard of the system information.')
+  .option('serve', 'Serves system information on a local IPC interface.')
   .parse(process.argv);
+
+// Handling application custom commands.
+const cmdArgs = ['serve', 'dashboard'];
+for (let i = 0; i < cmdArgs.length; ++i) {
+  if (process.argv.indexOf(cmdArgs[i]) !== -1) {
+    require(`./index-${cmdArgs[i]}`);
+    return;
+  }
+}
 
 // Initializing the client.
 const client = system.factory(program);
-
-// If `commander` handled a command, we stop.
-if (program.args.length > 0) {
-  return;
-}
 
 /**
  * Dumps the given error object on `stderr` and
@@ -63,4 +68,6 @@ client.prepare()
     dump[o.command](o.res);
     idx < results.length - 1 && console.log();
   }))
+  .then(() => client.close())
+  .then(() => process.exit(0))
   .catch(fail);
