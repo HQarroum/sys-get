@@ -25,6 +25,10 @@ const rate = program.refreshRate || (2 * 1000);
 const tx = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 const rx = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
+/**
+ * Dashboard widgets instanciations.
+ */
+
 // Terminal options.
 let opts = {
   shell:         process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe' : 'sh'),
@@ -44,69 +48,78 @@ let opts = {
 };
 
 // Terminal hint.
-let hint = "\r\nWelcome in the remote shell.\r\n" +
-    "Press Q to exit the application.\r\n\r\n";
+let hint = "\r\nWelcome in the remote shell !\r\n" +
+    "Press Q or type `exit` to quit the application, Ctrl+k to change focus between widgets.\r\n\r\n";
 
 // Storage donut layout.
-const donut = grid.set(8, 8, 4, 2, contrib.donut, 
-  { label: 'Used Storage Space',
-    radius: 16,
-    arcWidth: 4,
-    yPadding: 2,
-    data: [{ label: 'Storage', percent: 0 }]
-  });
+const donut = grid.set(8, 8, 4, 2, contrib.donut, {
+  label: 'Used Storage Space',
+  radius: 16,
+  arcWidth: 4,
+  yPadding: 2,
+  data: [{ label: 'Storage', percent: 0 }]
+});
 
 // Memory usage gauge layout.
-const gauge = grid.set(8, 10, 2, 2, contrib.gauge, { label: 'Memory (Free, Used, Swap)', percent: [10, 10, 10] });
+const gauge = grid.set(8, 10, 2, 2, contrib.gauge, {
+  label: 'Memory (Free, Used, Swap)',
+  percent: [10, 10, 10]
+});
 
 // Main network card throughput.
-const sparkline = grid.set(10, 10, 2, 2, contrib.sparkline, 
-  { label: 'Throughput (kbits/sec)'
-  , tags: true
-  , style: { fg: 'blue', titleFg: 'white' }});
+const sparkline = grid.set(10, 10, 2, 2, contrib.sparkline, {
+  label: 'Throughput (kbits/sec)',
+  tags: true,
+  style: { fg: 'blue', titleFg: 'white' }
+});
 
 // Bar layout for CPU cores utilization.
-const bar = grid.set(4, 6, 4, 3, contrib.bar, 
-  { label: 'CPU Core Utilization (%)'
-  , barWidth: 4
-  , barSpacing: 8
-  , xOffset: 2
-  , maxHeight: 100});
+const bar = grid.set(4, 6, 4, 3, contrib.bar, {
+  label: 'CPU Core Utilization (%)',
+  barWidth: 4,
+  barSpacing: 8,
+  xOffset: 2,
+  maxHeight: 100
+});
 
 // Running processes table layout.
-const table = grid.set(2, 9, 6, 3, contrib.table, 
-  { keys: true
-  , fg: 'yellow'
-  , label: 'Running Processes'
-  , columnSpacing: 1
-  , columnWidth: [24, 10, 10, 10]});
+const table = grid.set(2, 9, 6, 3, contrib.table, {
+  keys: true,
+  fg: 'yellow',
+  label: 'Running Processes',
+  columnSpacing: 1,
+  columnWidth: [24, 10, 10, 10]
+});
 
 // CPU temperature layout.
-const lcdLineOne = grid.set(0,9,2,3, contrib.lcd,
-  { label: 'CPU Temperature',
-    segmentWidth: 0.06,
-    segmentInterval: 0.11,
-    strokeWidth: 0.1,
-    elements: 5,
-    elementSpacing: 4,
-    elementPadding: 2
-  });
+const lcdLineOne = grid.set(0,9,2,3, contrib.lcd, {
+  label: 'CPU Temperature',
+  segmentWidth: 0.06,
+  segmentInterval: 0.11,
+  strokeWidth: 0.1,
+  elements: 5,
+  elementSpacing: 4,
+  elementPadding: 2
+});
 
-const errorsLine = grid.set(0, 6, 4, 3, contrib.line, 
-  { style: 
-    { line: "red"
-    , text: "white"
-    , baseline: "black"}
-  , label: 'Errors Rate'
-  , showLegend: true });
+const errorsLine = grid.set(0, 6, 4, 3, contrib.line, {
+  style: {
+    line: "red",
+    text: "white",
+    baseline: "black"
+  },
+  label: 'Errors Rate',
+  showLegend: true 
+});
 
 // System statistics graph layout.
-const transactionsLine = grid.set(0, 0, 6, 6, contrib.line, 
-  { showNthLabel: 5
-  , maxY: 600
-  , label: 'System Statistics'
-  , showLegend: true
-  , legend: {width: 12}});
+const transactionsLine = grid.set(0, 0, 6, 6, contrib.line, {
+  showNthLabel: 5,
+  maxY: 600,
+  label: 'System Statistics',
+  showLegend: true,
+  legend: { width: 12 }
+});
 
 // Log layout.
 const log = grid.set(8, 6, 4, 2, contrib.log, {
@@ -292,7 +305,10 @@ const refreshSystemState = (cpu, memory, processes) => {
   setLineData([cpuLine, memoryLine, processesLine], transactionsLine);
 };
 
-// Loading system information.
+/**
+ * Loads system information periodically at
+ * a `rate` interval.
+ */
 const refresh = () => client.all().then((results) => {
   let cpu, memory, processes = null;
   results.forEach((o, idx) => {
@@ -315,7 +331,9 @@ const refresh = () => client.all().then((results) => {
 });
 
 console.log('[+] Connecting to the dashboard ...');
-// Preparing the client.
+
+// Preparing the client and refreshing the dashboard 
+// information.
 client.prepare()
   .then(() => {
     // Creating a new terminal.
@@ -334,6 +352,9 @@ client.prepare()
       terminal.focus();
       screen.append(terminal);
     });
+    
+    // Gracefully quit the application on `exit`.
+    terminal.on('exit', () => process.kill(process.pid, 'SIGTERM'));
 
     // Triggering immediate `refresh` and scheduling
     // subsequent refresh operations.
@@ -366,10 +387,10 @@ setInterval(function() {
 
 
 // Quitting the application on defined key events.
-screen.key(['escape', 'q', 'C-c'], process.exit);
+screen.key(['escape', 'q'], () => process.kill(process.pid, 'SIGTERM'));
 
-// Handling change of focus.
-screen.key(['right', 'left'], () => screen.focusNext());
+// Handling changes of focus.
+screen.key(['C-k'], () => screen.focusNext());
 
 // Attaching on a `resize` event.
 screen.on('resize', function() {
@@ -382,6 +403,17 @@ screen.on('resize', function() {
   errorsLine.emit('attach');
   transactionsLine.emit('attach');
   log.emit('attach');
+});
+
+// Instanlling handlers for terminal signals to gracefully
+// exit the application.
+['SIGTERM', 'SIGINT', 'SIGQUIT'].forEach((signal) => {
+  process.on(signal, () => {
+    // Destrying the screen.
+    screen.destroy();
+    // Closing the client.
+    client.close().then(() => process.exit(0)).catch(() => process.exit(-1));
+  })
 });
 
 // Rendering the screen.

@@ -245,7 +245,7 @@ try {
 }
 
 /**
- * Closing the IPC connection when leaving the application.
+ * Closing the open connections when leaving the application.
  */
 process.on('SIGINT', () => {
   console.log('[+] Closing the server ...');
