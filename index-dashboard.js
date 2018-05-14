@@ -3,7 +3,6 @@ const os      = require('os');
 const pb      = require('pretty-bytes');
 const blessed = require('blessed');
 const contrib = require('blessed-contrib');
-const layout  = require('./dashboard/terminal-layout');
 const system  = require('./lib');
 const XTerm   = require('./dashboard/blessed-xterm');
 
@@ -17,7 +16,18 @@ const grid = new contrib.grid({ rows: 12, cols: 12, screen });
 const client = system.factory(program);
 
 // The application refresh rate.
-const rate = program.refreshRate || (2 * 1000);
+const rate = program.refreshRate || (3 * 1000);
+
+/**
+ * The domains we are notifying the client about.
+ */
+const domains = [
+  'processes',
+  'cpu',
+  'storage',
+  'memory',
+  'network'
+];
 
 /**
  * Network stats.
@@ -35,21 +45,21 @@ let opts = {
   args:          [],
   env:           process.env,
   cwd:           process.cwd(),
-  cursorType:    "block",
-  border:        "line",
+  cursorType:    'block',
+  border:        'line',
   scrollback:    1000,
   style: {
-    fg:        "default",
-    bg:        "default",
-    border:    { fg: "default" },
-    focus:     { border: { fg: "green" } },
-    scrolling: { border: { fg: "red" } }
+    fg:        'default',
+    bg:        'default',
+    border:    { fg: 'default' },
+    focus:     { border: { fg: 'green' } },
+    scrolling: { border: { fg: 'red' } }
   }
 };
 
 // Terminal hint.
 let hint = "\r\nWelcome in the remote shell !\r\n" +
-    "Press Q or type `exit` to quit the application, Ctrl+k to change focus between widgets.\r\n\r\n";
+  "Press Q or type `exit` to quit the application, Ctrl+k to change focus between widgets.\r\n\r\n";
 
 // Storage donut layout.
 const donut = grid.set(8, 8, 4, 2, contrib.donut, {
@@ -184,7 +194,7 @@ const refreshCpu = (cpu) => {
   bar.setData({ titles: cores, data: array });
   // Updating the CPU temperature.
   const value = cpu.temperature.main;
-  lcdLineOne.setDisplay(value);
+  lcdLineOne.setDisplay(value > 0 ? value : 'N-A');
   lcdLineOne.setOptions({
     color: value > 90 ? 'red' : value > 70 ? 'yellow' : 'green',
     elementPadding: 4
@@ -309,7 +319,7 @@ const refreshSystemState = (cpu, memory, processes) => {
  * Loads system information periodically at
  * a `rate` interval.
  */
-const refresh = () => client.all().then((results) => {
+const refresh = () => client.some(domains).then((results) => {
   let cpu, memory, processes = null;
   results.forEach((o, idx) => {
     if (o.command === 'cpu') {
@@ -328,9 +338,10 @@ const refresh = () => client.all().then((results) => {
   refreshSystemState(cpu, memory, processes);
   // Rendering the screen.
   screen.render();
+}).catch((err) => {
+  console.error(err);
+  process.exit(-1);
 });
-
-console.log('[+] Connecting to the dashboard ...');
 
 // Preparing the client and refreshing the dashboard 
 // information.
@@ -360,10 +371,7 @@ client.prepare()
     // subsequent refresh operations.
     return (refresh().then(() => setInterval(refresh, rate)));
   })
-  .catch((err) => {
-    console.error(err);
-    process.exit(-1);
-  });
+  .catch((err) => {});
 
 //set line charts dummy data
 

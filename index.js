@@ -24,6 +24,7 @@ program
   .option('-n, --namespace <namespace>', 'The Expressify IPC namespace to use.', 'system')
   .option('-b, --endpoint <endpoint>', 'The Expressify IPC endpoint to use.', 'monitoring.server')
   .option('-m, --mqtt-opts <path>', 'Path to an Expressify MQTT configuration file.')
+  .option('-t, --topic <topic>', 'The base MQTT topic scheme to use for the `mqtt` strategy.')
   .option('all', 'Displays all the system information.')
   .option('cpu', 'Displays information about the system CPU.')
   .option('memory', 'Displays information about the current memory usage.')

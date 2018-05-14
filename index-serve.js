@@ -10,9 +10,6 @@ let instance       = null;
 // Pty instances.
 const ptys = {};
 
-// Setting `ipc` as the default expressify method.
-if (!program.useExpressify) program.useExpressify = 'ipc';
-
 /**
  * The domains we are notifying the client about.
  */
@@ -61,6 +58,7 @@ const factory = {
    * @param {*} program an instance of `commander`.
    */
   createmqtt: function (program) {
+    if (!program.mqttOpts) return Promise.reject('[!] --mqtt-opts <path> is required');
     const opts = require(`${process.cwd()}/${program.mqttOpts}`);
     return connect(opts).then((mqtt) => new Expressify.Server({
         strategy: new MqttStrategy({
@@ -223,7 +221,7 @@ const start = (server) => {
    * Listening for incoming requests.
    */
   server.listen().then(() => {
-    console.log(`[+] The server is listening for incoming requests !`);
+    console.log(`[+] The server is listening for incoming requests using the '${program.useExpressify}' strategy !`);
     // Creating the interval loop notifying clients of
     // changes in the local system model.
     intervals = domains.map((d) => setInterval(() => {
@@ -235,24 +233,41 @@ const start = (server) => {
   instance = server;
 };
 
+/**
+ * Gracefully exits the application.
+ * @param {*} err the received error.
+ */
+const fail = (err) => {
+  console.error(err.name === 'TypeError' ? 
+    `[!] Expressify method '${program.useExpressify}' is not supported.` : err
+  );
+  process.exit(-1);
+};
+
 // Creating the Expressify server.
 try {
+  // Defaulting expressify strategy to `ipc`.
+  if (!program.useExpressify) program.useExpressify = 'ipc';
+  // Creating the Expressify server.
   factory[`create${program.useExpressify}`]
     .call(this, program)
-    .then(start);
+    .then(start)
+    .catch(fail);
 } catch (e) {
-  return Promise.reject(`Expressify method ${program.useExpressify} is not supported`);
+  fail(e);
 }
 
 /**
  * Closing the open connections when leaving the application.
  */
-process.on('SIGINT', () => {
-  console.log('[+] Closing the server ...');
-  // Destroying all the PTYs.
-  Object.keys(ptys).forEach((pty) => pty.destroy && pty.destroy());
-  // Clears all created intervals.
-  intervals && intervals.forEach((i) => clearInterval(i));
-  // Closing the connection.
-  instance && instance.close().then(process.exit);
+['SIGTERM', 'SIGINT', 'SIGQUIT'].forEach((signal) => {
+  process.on(signal, () => {
+    console.log('[+] Closing the server ...');
+    // Destroying all the PTYs.
+    Object.keys(ptys).forEach((pty) => pty.destroy && pty.destroy());
+    // Clears all created intervals.
+    intervals && intervals.forEach((i) => clearInterval(i));
+    // Closing the connection.
+    instance && instance.close().then(process.exit);
+  });
 });
