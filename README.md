@@ -49,6 +49,12 @@ It is also possible to filter the system metrics by topic when running `sys-get`
  - **network** - Displays information on the network interface and their associated metrics.
  - **processes** - Lists the current processes along with their associated metrics (memory usage, cpu load, etc.)
  
+For instance, in order to diplay information about the CPU, memory and storage sub-systems, you simply run :
+
+```bash
+sys-get cpu memory storage
+```
+
 ### Using the dashboard
  
 The `sys-get` tool comes buit-in with a dashboard built using [blessed-contrib](https://github.com/yaronn/blessed-contrib/) allowing to display the system metrics using live graphs and structured information right in the terminal !
