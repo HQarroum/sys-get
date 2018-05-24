@@ -29,9 +29,39 @@ npm install --global sys-get
 
  - Portable monitoring of system components (CPU, Memory, Processes, Network, Storage, OS).
  - CPU temperature monitoring (see below for details).
- - Can expose system metrics through `expressify-ipc`.
+ - Terminal based live dashboard of system metrics.
+ - All features work locally or remotely by exposing system metrics through `ipc` or `mqtt` using `expressify`.
+ - Allows remote shell access on the host.
 
 ## Usage
+
+### Retrieving system informations
+
+Once `sys-get` is installed, you can simply run `sys-get` in your shell without any arguments, which will dump all the system metrics currently available on the host machine.
+
+It is also possible to filter the system metrics by topic when running `sys-get`. The available system metrics are the following :
+
+ - **os** - Dumps general information about the host operating system.
+ - **memory** - Displays available, used and total memory and swap metrics.
+ - **graphics** - Lists the available graphic cards as well as the currently connected monitors.
+ - **cpu** - Displays information on the CPU (architecture, model, load, etc.)
+ - **storage** - Lists the available block devices and partitions on the system.
+ - **network** - Displays information on the network interface and their associated metrics.
+ - **processes** - Lists the current processes along with their associated metrics (memory usage, cpu load, etc.)
+ 
+### Using the dashboard
+ 
+The `sys-get` tool comes buit-in with a dashboard built using [blessed-contrib](https://github.com/yaronn/blessed-contrib/) allowing to display the system metrics using live graphs and structured information right in the terminal !
+ 
+To launch the dashboard, you simply run :
+
+```bash
+sys-get dashboard
+```
+
+### Using `sys-get` remotely
+
+
 
 ## Examples
 
