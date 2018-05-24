@@ -1,10 +1,9 @@
 const program = require('commander');
-const os      = require('os');
 const pb      = require('pretty-bytes');
 const blessed = require('blessed');
 const contrib = require('blessed-contrib');
 const system  = require('./lib');
-const XTerm   = require('./dashboard/blessed-xterm');
+const XTerm   = require('./lib/pty/blessed-xterm');
 
 // Creating a new screen instance.
 const screen = blessed.screen();
@@ -14,9 +13,6 @@ const grid = new contrib.grid({ rows: 12, cols: 12, screen });
 
 // Instanciating the client.
 const client = system.factory(program);
-
-// The application refresh rate.
-const rate = program.refreshRate || (3 * 1000);
 
 /**
  * The domains we are notifying the client about.
@@ -41,10 +37,9 @@ const rx = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 
 // Terminal options.
 let opts = {
-  shell:         process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe' : 'sh'),
   args:          [],
   env:           process.env,
-  cwd:           process.cwd(),
+  cwd:           '/',
   cursorType:    'block',
   border:        'line',
   scrollback:    1000,
@@ -60,6 +55,15 @@ let opts = {
 // Terminal hint.
 let hint = "\r\nWelcome in the remote shell !\r\n" +
   "Press Q or type `exit` to quit the application, Ctrl+k to change focus between widgets.\r\n\r\n";
+
+/**
+ * Helper function returning the current time
+ * in a textual form.
+ */
+const getTime = () => {
+  const date  = new Date();
+  return `${date.getHours()}:${date.getMinutes()}`;
+};
 
 // Storage donut layout.
 const donut = grid.set(8, 8, 4, 2, contrib.donut, {
@@ -104,6 +108,7 @@ const table = grid.set(2, 9, 6, 3, contrib.table, {
 // CPU temperature layout.
 const lcdLineOne = grid.set(0,9,2,3, contrib.lcd, {
   label: 'CPU Temperature',
+  display: '-----',
   segmentWidth: 0.06,
   segmentInterval: 0.11,
   strokeWidth: 0.1,
@@ -112,13 +117,14 @@ const lcdLineOne = grid.set(0,9,2,3, contrib.lcd, {
   elementPadding: 2
 });
 
-const errorsLine = grid.set(0, 6, 4, 3, contrib.line, {
+// Disk throughput graph layout.
+const diskLine = grid.set(0, 6, 4, 3, contrib.line, {
   style: {
-    line: "red",
-    text: "white",
-    baseline: "black"
+    line: 'red',
+    text: 'white',
+    baseline: 'black'
   },
-  label: 'Errors Rate',
+  label: 'Disk Throughput',
   showLegend: true 
 });
 
@@ -133,15 +139,15 @@ const transactionsLine = grid.set(0, 0, 6, 6, contrib.line, {
 
 // Log layout.
 const log = grid.set(8, 6, 4, 2, contrib.log, {
-  fg: "green",
-  selectedFg: "green",
+  fg: 'green',
+  selectedFg: 'green',
   label: 'Server Log'
 });
 
 // CPU line.
 const cpuLine = {
   title: 'CPU',
-  style: {line: 'red'},
+  style: { line: 'red' },
   x: [],
   y: []
 };
@@ -149,7 +155,7 @@ const cpuLine = {
 // Memory line.
 const memoryLine = {
   title: 'Memory',
-  style: {line: 'yellow'},
+  style: { line: 'yellow' },
   x: [],
   y: []
 };
@@ -157,7 +163,23 @@ const memoryLine = {
 // Processes line.
 const processesLine = {
   title: 'Processes',
-  style: {line: 'green'},
+  style: { line: 'green' },
+  x: [],
+  y: []
+};
+
+// Disk read throughput data.
+var diskReadData = {
+  title: 'Read I/O',
+  style: { line: 'red' },
+  x: [],
+  y: []
+};
+
+// Disk write throughput data.
+var diskWriteData = {
+  title: 'Write I/O',
+  style: { line: 'green' },
   x: [],
   y: []
 };
@@ -183,13 +205,27 @@ const setLineData = (mockData, line) => {
 const refreshCpu = (cpu) => {
   const cores = [];
   const array = [];
+  let load    = 0;
 
   cpu.load.cpus.forEach((cpu, idx) => {
     // Adding a title to a CPU Core bar.
     cores.push(`#${idx}`);
     // Adding its associated value.
     array.push(Math.round(cpu.load));
+    // Suming up core loads.
+    load += Math.round(cpu.load);
   });
+  // Averaging the load across the cores.
+  load /= cpu.load.cpus.length;
+  // Shifting values.
+  if (cpuLine.x.length > 50) {
+    cpuLine.x.shift(); cpuLine.y.shift();
+  }
+  // Updating line.
+  cpuLine.x.push(getTime());
+  cpuLine.y.push(load);
+  // Updating the graph data.
+  setLineData([cpuLine, memoryLine, processesLine], transactionsLine);
   // Updating the bar.
   bar.setData({ titles: cores, data: array });
   // Updating the CPU temperature.
@@ -199,6 +235,8 @@ const refreshCpu = (cpu) => {
     color: value > 90 ? 'red' : value > 70 ? 'yellow' : 'green',
     elementPadding: 4
   });
+  // Refreshing the screen.
+  screen.render();
 };
 
 /**
@@ -219,8 +257,21 @@ const refreshStorage = (storage) => {
   if (percent >= 25) color = 'cyan';
   if (percent >= 50) color = 'yellow';
   if (percent >= 75) color = 'red';
+  // Shifting values.
+  if (diskReadData.x.length > 15) {
+    diskReadData.x.shift(); diskReadData.y.shift();
+    diskWriteData.x.shift(); diskWriteData.y.shift();
+  }
+  // Updating line.
+  diskReadData.x.push(getTime());
+  diskReadData.y.push(storage.ios.rIO_sec);
+  diskWriteData.x.push(getTime());
+  diskWriteData.y.push(storage.ios.wIO_sec);
+  // Updating the disk throughput graph.
+  setLineData([diskReadData, diskWriteData], diskLine);
+  // Updating the storage donut.
   donut.setData([
-    { percent: Math.round(percent), label: 'storage', color}
+    { percent: Math.round(percent), label: 'storage', color }
   ]);
 };
 
@@ -233,7 +284,19 @@ const refreshMemory = (memory) => {
   const memUsed  = Math.round((memory.used * 100) / total);
   const swapUsed = Math.round((memory.swapused * 100) / total);
   const memFree  = Math.round(100 - (memUsed + swapUsed));
+  const mem      = Math.round((memory.used * 100) / memory.total);
+  // Updating the memory gauge.
   gauge.setStack([memFree, memUsed, swapUsed]);
+  // Shifting values.
+  if (memoryLine.x.length > 50) {
+    memoryLine.x.shift();
+    memoryLine.y.shift();
+  }
+  // Updating values.
+  memoryLine.x.push(getTime());
+  memoryLine.y.push(mem);
+  // Updating the graph data.
+  setLineData([cpuLine, memoryLine, processesLine], transactionsLine);
 };
 
 /**
@@ -241,7 +304,7 @@ const refreshMemory = (memory) => {
  * @param {*} processes the processes information object.
  */
 const refreshProcesses = (processes) => {
-  var data = []
+  var data = [];
 
   processes.list.sort((a, b) => b.pcpu - a.pcpu).forEach((process) => {
     const row = [];
@@ -251,7 +314,18 @@ const refreshProcesses = (processes) => {
     row.push(process.user);
     data.push(row);
   });
+  // Updating the process list.
   table.setData({ headers: ['Process', 'Cpu', 'Memory', 'User'], data });
+  // Shifting values.
+  if (processesLine.x.length > 50) {
+    processesLine.x.shift();
+    processesLine.y.shift();
+  }
+  // Updating values.
+  processesLine.x.push(getTime());
+  processesLine.y.push(processes.list.length);
+  // Updating the graph data.
+  setLineData([cpuLine, memoryLine, processesLine], transactionsLine);
 };
 
 /**
@@ -278,48 +352,12 @@ const refreshNetwork = (network) => {
 };
 
 /**
- * Refreshes the system status graph.
- * @param {*} cpu the CPU information object.
- * @param {*} memory the memory information object.
- * @param {*} processes the processes information object.
+ * Refreshes the dashboard view with the
+ * given `results.
+ * @param {*} results the results to use to update
+ * the dashboard.
  */
-const refreshSystemState = (cpu, memory, processes) => {
-  const date  = new Date();
-  const time  = `${date.getHours()}:${date.getMinutes()}`
-  const mem   = Math.round((memory.used * 100) / memory.total);
-  const proc  = processes.all;
-  let load    = 0;
-
-  cpu.load.cpus.forEach((cpu) => load += Math.round(cpu.load));
-  // Averaging the load across the cores.
-  load /= cpu.load.cpus.length;
-
-  // Shifting values.
-  if (cpuLine.x.length > 50) {
-    cpuLine.x.shift(); cpuLine.y.shift();
-    memoryLine.x.shift(); memoryLine.y.shift();
-    processesLine.x.shift(); processesLine.y.shift();
-  }
-  
-  // Updating time.
-  cpuLine.x.push(time);
-  memoryLine.x.push(time);
-  processesLine.x.push(time);
-
-  // Updating values.
-  cpuLine.y.push(load);
-  memoryLine.y.push(mem);
-  processesLine.y.push(proc);
-
-  // Updating the graph data.
-  setLineData([cpuLine, memoryLine, processesLine], transactionsLine);
-};
-
-/**
- * Loads system information periodically at
- * a `rate` interval.
- */
-const refresh = () => client.some(domains).then((results) => {
+const render = (results) => {
   let cpu, memory, processes = null;
   results.forEach((o, idx) => {
     if (o.command === 'cpu') {
@@ -334,14 +372,29 @@ const refresh = () => client.some(domains).then((results) => {
       refreshProcesses(processes = o.res);
     }
   });
-  // Updates the system state graph.
-  refreshSystemState(cpu, memory, processes);
   // Rendering the screen.
   screen.render();
-}).catch((err) => {
+};
+
+/**
+ * Dumps the given error object on `stderr` and
+ * exists the application.
+ * @param {*} err the error to dump.
+ */
+const fail = (err) => {
+  // Destrying the screen.
+  screen.destroy();
+  // Logging the error.
   console.error(err);
+  // Quitting the application.
   process.exit(-1);
-});
+};
+
+/**
+ * Loads system information periodically at
+ * a `rate` interval.
+ */
+const refresh = () => client.some(domains).then((results) => render(results)).catch(fail);
 
 // Preparing the client and refreshing the dashboard 
 // information.
@@ -353,7 +406,7 @@ client.prepare()
       top:     31,
       width:   Math.floor(screen.width / 2),
       height:  30,
-      label:   "Remote Terminal",
+      label:   'Remote Terminal',
       ptyInstance: client.pty()
     }));
 
@@ -363,36 +416,27 @@ client.prepare()
       terminal.focus();
       screen.append(terminal);
     });
+
+    // On a PTY error, we exit the application.
+    terminal.on('error', fail);
+
+    // Logging client initialization.
+    log.log('[+] Client initialized.');
     
-    // Gracefully quit the application on `exit`.
+    // Gracefully exits the application on `exit`.
     terminal.on('exit', () => process.kill(process.pid, 'SIGTERM'));
 
-    // Triggering immediate `refresh` and scheduling
-    // subsequent refresh operations.
-    return (refresh().then(() => setInterval(refresh, rate)));
+    // Triggering immediate `refresh` and subscribing to domains.
+    return (refresh().then(() => {
+      // Logging reception of all metrics.
+      log.log('[+] Got all metrics from the host.');
+      domains.forEach((domain) => client.subscribe(domain, (topic, value) => {
+        log.log(`[+] Received '${topic}' update.`);
+        render(value);
+      }));
+    }));
   })
-  .catch((err) => {});
-
-//set line charts dummy data
-
-var errorsData = {
-  title: 'server 1',
-  x: ['00:00', '00:05', '00:10', '00:15', '00:20', '00:25'],
-  y: [30, 50, 70, 40, 50, 20]
-}
-
-var latencyData = {
-  x: ['t1', 't2', 't3', 't4'],
-  y: [5, 1, 7, 5]
-}
-
-setLineData([errorsData], errorsLine)
-
-
-setInterval(function() {   
-    setLineData([errorsData], errorsLine)
-}, 1500)
-
+  .catch(fail);
 
 // Quitting the application on defined key events.
 screen.key(['escape', 'q'], () => process.kill(process.pid, 'SIGTERM'));
@@ -401,14 +445,13 @@ screen.key(['escape', 'q'], () => process.kill(process.pid, 'SIGTERM'));
 screen.key(['C-k'], () => screen.focusNext());
 
 // Attaching on a `resize` event.
-screen.on('resize', function() {
+screen.on('resize', function () {
   donut.emit('attach');
   gauge.emit('attach');
   sparkline.emit('attach');
   bar.emit('attach');
   table.emit('attach');
   lcdLineOne.emit('attach');
-  errorsLine.emit('attach');
   transactionsLine.emit('attach');
   log.emit('attach');
 });
@@ -419,6 +462,8 @@ screen.on('resize', function() {
   process.on(signal, () => {
     // Destrying the screen.
     screen.destroy();
+    // Logging that we are quitting the application.
+    console.log('[+] Closing the dashboard ...');
     // Closing the client.
     client.close().then(() => process.exit(0)).catch(() => process.exit(-1));
   })

@@ -65,10 +65,10 @@ const fail = (err) => {
  */
 client.prepare()
   .then(() => client.some(argument))
-  .then((results) => results.forEach((o, idx) => {
+  .then((results) => {console.log(results);results.forEach((o, idx) => {
     dump[o.command](o.res);
     idx < results.length - 1 && console.log();
-  }))
+  })})
   .then(() => client.close())
   .then(() => process.exit(0))
   .catch(fail);

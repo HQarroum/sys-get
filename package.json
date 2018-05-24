@@ -50,6 +50,7 @@
     "pretty-bytes": "^5.0.0",
     "progress": "^2.0.0",
     "systeminformation": "^3.40.0",
+    "tail": "^1.2.3",
     "terminal-kit": "^1.15.5",
     "timed-cache": "^1.1.0",
     "xterm": "2.8.1"

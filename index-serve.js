@@ -1,17 +1,19 @@
 const program      = require('commander');
 const Pty          = require('node-pty');
 const iot          = require('aws-iot-device-sdk');
+const os           = require('os');
 const Expressify   = require('../expressify');
 const IpcStrategy  = require('../expressify-ipc');
 const MqttStrategy = require('../expressify-mqtt');
 const system       = require('./lib');
+const logger       = require('./lib/middlewares/logger');
 let instance       = null;
 
 // Pty instances.
 const ptys = {};
 
 /**
- * The domains we are notifying the client about.
+ * The domains we are notifying the clients on.
  */
 const domains = [
   'processes',
@@ -25,7 +27,7 @@ const domains = [
 /**
  * The updates refresh rate.
  */
-const rate = program.refreshRate || (15 * 1000);
+const rate = program.refreshRate || (10 * 1000);
 
 /**
  * Initiates an MQTT connection.
@@ -33,7 +35,7 @@ const rate = program.refreshRate || (15 * 1000);
  */
 const connect = (opts) => new Promise((resolve, reject) => {
   const mqtt = iot.device(opts);
-  mqtt.on('connect', () => resolve(mqtt));
+  mqtt.on('connect', () => resolve(mqtt)).on('error', fail);
 });
 
 const factory = {
@@ -85,11 +87,40 @@ const guid = () => {
 };
 
 /**
+ * Destroys the given `pty`.
+ * @param {} pty the pty instance to destroy.
+ */
+const destroyPty = (pty) => {
+  // Destroing the `pty`.
+  pty.destroy();
+  // Removing the reference to the `pty`.
+  delete ptys[pty.uuid];
+  // Logging the `pty` removal.
+  console.log(`[-] Destroyed the pty '${pty.uuid}'`);
+};
+
+/**
+ * @return the pty identifier associated with the
+ * given `resource`.
+ * @param {*} resource the resource to extract the
+ * pty identifier from.
+ */
+const ptyIdOf = (resource) => {
+  const paths = resource.split('/');
+  return (paths[paths.length - 1]);
+};
+
+/**
  * Declares the resources supported by the server
  * and starts listening for requestes.
  * @param {*} server the server instance.
  */
 const start = (server) => {
+
+  /**
+   * Logging requests using the `logger` middleware.
+   */
+  server.use(logger);
 
   /**
    * Retrieves and returns informations about running
@@ -155,12 +186,16 @@ const start = (server) => {
     const uuid = guid();
     // Creating a new `pty`.
     const pty  = Pty.fork(req.payload.shell, req.payload.args, req.payload.options);
+    // Associating the `uuid` with the `pty`.
+    pty.uuid = uuid;
     // Subscribing to `data` events.
     pty.on('data', (data) => {
-      server.publish(`/system/pty/${uuid}`, data)
+      server.publish(`/system/pty/${uuid}`, data, { ordered: true });
     });
     // Saving the `pty` instance.
     ptys[uuid] = pty;
+    // Logging the `pty` creation.
+    console.log(`[+] Created pty '${uuid}'`);
     // Responding with the UUID associated with the `pty`.
     res.send({ uuid });
   });
@@ -198,8 +233,9 @@ const start = (server) => {
       return (res.send(404));
     }
     // Writing the data on the `pty`.
-    pty.write(new Buffer(req.payload.data));
-    return (res.send(200));
+    pty.write(Buffer.from(req.payload.data));
+    // Responding with a success code.
+    res.send(200);
   });
 
   /**
@@ -210,8 +246,7 @@ const start = (server) => {
 
     // Destroying the `pty` instance if it exists.
     if (pty) {
-      pty.destroy();
-      delete ptys[req.params.uuid];
+      destroyPty(pty);
       return (res.send(200));
     }
     res.send(404);
@@ -226,8 +261,21 @@ const start = (server) => {
     // changes in the local system model.
     intervals = domains.map((d) => setInterval(() => {
       system[d].get().then((r) => server.publish(`/system/${d}`, r));
-    }, 10 * 1000));
+    }, rate));
   });
+
+  /**
+   * Listening for subscriptions and unsubscriptions events.
+   */
+  server
+    .on('subscription.added', (req) => console.log(`[+] New subscription registered for '${req.resource}'`))
+    .on('subscription.removed', (req) => {
+      // Removing any existing `pty` associated to the unsubscribed resource.
+      const pty = ptys[ptyIdOf(req.resource)];
+      if (pty) destroyPty(pty);
+      // Logging the unsubscription.
+      console.log(`[-] Unsubscription registered from '${req.resource}'`);
+    });
 
   // Registering the server instance.
   instance = server;
