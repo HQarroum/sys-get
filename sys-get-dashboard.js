@@ -252,7 +252,7 @@ const refreshStorage = (storage) => {
     total += storage.size;
     used  += storage.used;
   });
-  const percent = (used * 100) / total;
+  let percent = (used * 100) / total;
   if (percent > 99) percent = 0.00;
   if (percent >= 25) color = 'cyan';
   if (percent >= 50) color = 'yellow';
@@ -358,8 +358,8 @@ const refreshNetwork = (network) => {
  * the dashboard.
  */
 const render = (results) => {
-  let cpu, memory, processes = null;
-  results.forEach((o, idx) => {
+  let cpu, memory, processes;
+  results.forEach((o) => {
     if (o.command === 'cpu') {
       refreshCpu(cpu = o.res);
     } else if (o.command === 'storage') {

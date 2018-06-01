@@ -1,5 +1,4 @@
 const program = require('commander');
-const pb      = require('pretty-bytes');
 const blessed = require('blessed');
 const contrib = require('blessed-contrib');
 const system  = require('./lib');
@@ -13,10 +12,6 @@ const grid = new contrib.grid({ rows: 12, cols: 12, screen });
 
 // Instanciating the client.
 const client = system.factory(program);
-
-/**
- * Dashboard widgets instanciations.
- */
 
 // Terminal options.
 let opts = {
