@@ -61,6 +61,8 @@ sys-get cpu memory storage
  
 `sys-get` comes buit-in with a dashboard built on top of [blessed-contrib](https://github.com/yaronn/blessed-contrib/) allowing to display the system metrics using live graphs and structured information right in your terminal !
  
+[![Dashboard](assets/dashboard.png)](assets/dashboard.png)
+
 To launch a local instance of a dashboard, you simply run :
 
 ```bash
