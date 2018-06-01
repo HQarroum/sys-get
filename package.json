@@ -1,6 +1,6 @@
 {
   "name": "sys-get",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A portable system information provider CLI tool.",
   "main": "sys-get.js",
   "bin": {
@@ -50,6 +50,7 @@
     "jsdom": "^11.10.0",
     "lodash": "^4.17.10",
     "moment": "^2.22.1",
+    "node-ipc": "^9.1.1",
     "node-pty": "^0.7.4",
     "pretty-bytes": "^5.0.0",
     "progress": "^2.0.0",
