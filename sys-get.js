@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+
+const _        = require('lodash');
 const program  = require('commander');
 const fs       = require('fs');
 const system   = require('./lib');
@@ -8,8 +11,7 @@ const commands = system.commands();
 const { version, description, name } = require('./package.json');
 
 // Argument list.
-let argument = process.argv.slice(2, process.argv.length).filter((arg) => commands.indexOf(arg) !== -1);
-if (!process.argv[2]) process.argv.push('all');
+let argument = process.argv.slice(2, process.argv.length);
 if (!argument.length) argument = commands;
 
 /**
@@ -25,7 +27,6 @@ program
   .option('-b, --endpoint <endpoint>', 'The Expressify IPC endpoint to use.', 'monitoring.server')
   .option('-m, --mqtt-opts <path>', 'Path to an Expressify MQTT configuration file.')
   .option('-t, --topic <topic>', 'The base MQTT topic scheme to use for the `mqtt` strategy.')
-  .option('all', 'Displays all the system information.')
   .option('cpu', 'Displays information about the system CPU.')
   .option('memory', 'Displays information about the current memory usage.')
   .option('network', 'Displays information on the system network interfaces.')
@@ -35,15 +36,22 @@ program
   .option('storage', 'Display information on the storage devices.')
   .option('dashboard', 'Display a live dashboard of the system information.')
   .option('serve', 'Serves system information on a local IPC interface.')
+  .option('shell', 'Connects to a remote `sys-get` shell.')
   .parse(process.argv);
 
 // Handling application custom commands.
-const cmdArgs = ['serve', 'dashboard'];
+const cmdArgs = ['serve', 'dashboard', 'shell'];
 for (let i = 0; i < cmdArgs.length; ++i) {
   if (process.argv.indexOf(cmdArgs[i]) !== -1) {
     require(`./sys-get-${cmdArgs[i]}`);
     return;
   }
+}
+
+// Error handling.
+if (_.find(argument, (cmd) => commands.indexOf(cmd) === -1)) {
+  program.outputHelp();
+  process.exit(-1);
 }
 
 // Initializing the client.

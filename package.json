@@ -2,12 +2,12 @@
   "name": "sys-get",
   "version": "1.0.0",
   "description": "A portable system information provider CLI tool.",
-  "main": "index.js",
+  "main": "sys-get.js",
   "bin": {
-    "sys-get": "index.js"
+    "sys-get": "sys-get.js"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "node sys-get.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -45,6 +45,7 @@
     "clone": "^2.1.1",
     "commander": "^2.15.1",
     "jsdom": "^11.10.0",
+    "lodash": "^4.17.10",
     "moment": "^2.22.1",
     "node-pty": "^0.7.4",
     "pretty-bytes": "^5.0.0",
