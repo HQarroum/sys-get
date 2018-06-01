@@ -7,7 +7,7 @@
 
 [![CodeFactor](https://www.codefactor.io/repository/github/hqarroum/sys-get/badge/master)](https://www.codefactor.io/repository/github/hqarroum/sys-get/overview/master)
 
-Current version: **1.0.0**
+Current version: **1.0.1**
 
 Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 
