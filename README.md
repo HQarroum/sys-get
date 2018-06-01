@@ -30,14 +30,16 @@ npm install --global sys-get
  - Portable monitoring of system components (CPU, Memory, Processes, Network, Storage, OS).
  - CPU temperature monitoring (see below for details).
  - Terminal based live dashboard of system metrics.
- - All features work locally or remotely by exposing system metrics through `ipc` or `mqtt` using `expressify`.
- - Allows remote shell access on the host.
+ - All features work locally or remotely by exposing system metrics through `ipc` or `mqtt` using [`expressify`](https://github.com/HQarroum/expressify).
+ - Enables local and remote shell access.
 
 ## Usage
 
+In this section, we are going to review all the commands and use-cases associated with `sys-get` command-line tool through working examples.
+
 ### Retrieving system informations
 
-Once `sys-get` is installed, you can simply run `sys-get` in your shell without any arguments, which will dump all the system metrics currently available on the host machine.
+Once `sys-get` is installed, you can simply run `sys-get` without any arguments, which will dump all the system metrics currently available on the host machine.
 
 It is also possible to filter the system metrics by topic when running `sys-get`. The available system metrics are the following :
 
@@ -49,7 +51,7 @@ It is also possible to filter the system metrics by topic when running `sys-get`
  - **network** - Displays information on the network interface and their associated metrics.
  - **processes** - Lists the current processes along with their associated metrics (memory usage, cpu load, etc.)
  
-For instance, in order to diplay information about the CPU, memory and storage sub-systems, you simply run :
+For instance, in order to display information about the CPU, the memory and the storage sub-systems, you simply run :
 
 ```bash
 sys-get cpu memory storage
@@ -57,13 +59,21 @@ sys-get cpu memory storage
 
 ### Using the dashboard
  
-The `sys-get` tool comes buit-in with a dashboard built using [blessed-contrib](https://github.com/yaronn/blessed-contrib/) allowing to display the system metrics using live graphs and structured information right in the terminal !
+The `sys-get` tool comes buit-in with a dashboard built using [blessed-contrib](https://github.com/yaronn/blessed-contrib/) allowing to display the system metrics using live graphs and structured information right in your terminal !
  
 To launch the dashboard, you simply run :
 
 ```bash
 sys-get dashboard
 ```
+
+The information are updated at a default time interval, to update the refresh interval of the dashboard, you can specify an optional `--refresh-rate` option to `sys-get`. For instance, the following command will request the dashboard to update system metrics once every 1 second.
+
+```bash
+sys-get dashboard --refresh-rate 1000
+```
+
+> Note that the retrieval of system metrics can be a heavy process, it is thus recommended to keep the refresh rate equal or above to 1 second.
 
 ### Using `sys-get` remotely
 
