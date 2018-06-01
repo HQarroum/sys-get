@@ -16,7 +16,7 @@ Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 - [Installation](#install)
 - [Features](#features)
 - [Usage](#usage)
-- [Examples](#examples)
+- [Notes](#notes)
 - [See also](#see-also)
 
 ## Install
@@ -28,18 +28,18 @@ npm install --global sys-get
 ## Features
 
  - Portable monitoring of system components (CPU, Memory, Processes, Network, Storage, OS).
- - CPU temperature monitoring (see below for details).
- - Terminal based live dashboard of system metrics.
+ - CPU temperature monitoring (see [below for details](#notes)).
+ - A real-time dashboard of system metrics in the terminal.
  - All features work locally or remotely by exposing system metrics through `ipc` or `mqtt` using [`expressify`](https://github.com/HQarroum/expressify).
  - Enables local and remote shell access.
 
 ## Usage
 
-In this section, we are going to review all the commands and use-cases associated with `sys-get` command-line tool through working examples.
+In this section, we are going to review all the sub-commands and use-cases associated with the `sys-get` command-line tool through different examples.
 
 ### Retrieving system informations
 
-Once `sys-get` is installed, you can simply run `sys-get` without any arguments, which will dump all the system metrics currently available on the host machine.
+Once `sys-get` is installed on your system, you can simply run `sys-get` without any arguments, which will dump all the system metrics currently available on the host machine.
 
 It is also possible to filter the system metrics by topic when running `sys-get`. The available system metrics are the following :
 
@@ -59,9 +59,9 @@ sys-get cpu memory storage
 
 ### Using the dashboard
  
-The `sys-get` tool comes buit-in with a dashboard built using [blessed-contrib](https://github.com/yaronn/blessed-contrib/) allowing to display the system metrics using live graphs and structured information right in your terminal !
+`sys-get` comes buit-in with a dashboard built on top of [blessed-contrib](https://github.com/yaronn/blessed-contrib/) allowing to display the system metrics using live graphs and structured information right in your terminal !
  
-To launch the dashboard, you simply run :
+To launch a local instance of a dashboard, you simply run :
 
 ```bash
 sys-get dashboard
@@ -75,29 +75,29 @@ sys-get dashboard --refresh-rate 1000
 
 > Note that the retrieval of system metrics can be a heavy process, it is thus recommended to keep the refresh rate equal or above to 1 second.
 
-#### Focus
+#### Changing the focus
 
 Some of the widgets mounted on the dashboard grid can earn a focus, it is the case for the *terminal* widget which has the focus by default, as well for the *process* widget. In order to switch the focus between widgets use the **Ctrl+K** shortcut.
 
 ### Using `sys-get` remotely
 
-One of the nicest feature of `sys-get` is to be able to expose a RESTful interface, using the [`expressify`](https://github.com/HQarroum/expressify) framework, on top of any transport mechanism.
+One of the nicest feature of `sys-get` is to be able to expose a RESTful interface, using the [`expressify`](https://github.com/HQarroum/expressify) framework, on top of any transport mechanism. You will see below through the supported transports how to remotely operate `sys-get`.
 
 #### Exposing metrics over IPC
 
-It is sometimes useful to expose system metrics to another process running on the same host in order to decouple services but also to avoid an unecessary development. To start serving the `sys-get` API over the IPC transport, run the following command.
+It is often useful to expose system metrics to another process running on the same host in order to decouple services but also to avoid an unecessary development in every processes requiring this feature. To start serving the `sys-get` API over the Inter-Process Communication (IPC) transport, run the following command.
 
 ```bash
 sys-get serve --use-expressify ipc
 ```
 
-> Note that the `ipc` transport is selected by default when `sys-get serve` is run, and omitting the `use-expressify` options will have the same effect as the above command.
+> Note that the `ipc` transport is selected by default when `sys-get serve` is run, and omitting the `use-expressify` options will have the same effect as the above command in this case.
 
 ##### IPC advanced options
 
-The [ipc strategy](https://github.com/HQarroum/expressify-ipc) for Expressify uses local sockets to operate the communication between processes in a cross-platform manner, these sockets can be attributed an `endpoint` which uniquely identifies the server to communicate with, and a `namespace` which is used to partition in topics the communication with an endpoint.
+The [ipc strategy](https://github.com/HQarroum/expressify-ipc) for Expressify uses local sockets to operate the communication between processes in a cross-platform manner. These sockets can be attributed an `endpoint` which uniquely identifies the server to communicate with, and a `namespace` which is used to partition in different topics the communication with an endpoint.
 
-To specify an new endpoint or namespace, you can selectively use the following options. Below is an example where the endpoint is `expressif.server` and the namespace is `foo`.
+To specify a new endpoint or namespace, you can selectively use the following options. Below is an example where the endpoint is `expressif.server` and the namespace is `foo`.
 
 ```bash
 sys-get serve --use-expressify ipc --endpoint expressify.server --namespace foo
@@ -107,9 +107,13 @@ This is a useful option if you happen to run multiple instances of a `sys-get se
 
 ##### Using `sys-get` as a client
 
-Once you have a running `sys-get serve` instance running on your host, you can run `sys-get` as a client to query it. Below is an example of how to connect the live dashboard to your server instance.
+Once you have a running `sys-get serve` instance running on your host, you can run `sys-get` as a client to start querying it. Below are two examples of how to connect `sys-get` to your server instance.
 
 ```bash
+# Retrieves once the `os` and `memory` system metrics from the remote ipc endpoint.
+sys-get os memory --use-expressify ipc
+
+# Connects the dashboard to the remote ipc endpoint.
 sys-get dashboard --use-expressify ipc
 ```
 
@@ -117,9 +121,9 @@ sys-get dashboard --use-expressify ipc
 
 #### Exposing metrics over MQTT
 
-The [mqtt strategy](https://github.com/HQarroum/expressify-mqtt) for Expressify uses MQTT topics to operate the communication between a `sys-get` server and a client.
+The [mqtt strategy](https://github.com/HQarroum/expressify-mqtt) for Expressify uses MQTT topics to operate the communication between `sys-get` server and a client instances.
 
-To start serving the `sys-get` API over the MQTT transport, run the following command.
+To start serving the `sys-get` API over an MQTT transport, run the following command.
 
 ```bash
 sys-get serve --use-expressify mqtt --mqtt-opts /path/to/config.json
@@ -129,7 +133,7 @@ The `mqtt-opts` sepcifier indicates to `sys-get` the location of the MQTT descri
 
 ##### Updating the base topic
 
-When the MQTT strategy is run, it defaults to a communication scheme based on `system` topic. Below is an example of how to update this topic to have another value.
+When the MQTT strategy is run, it defaults to a communication scheme based on the `system` topic. Below is an example of how to update this value and use another topic.
 
 ```bash
 sys-get serve --use-expressify mqtt --mqtt-opts /path/to/config.json --topic my/topic
@@ -137,9 +141,9 @@ sys-get serve --use-expressify mqtt --mqtt-opts /path/to/config.json --topic my/
 
 #### A note on server-side refresh rates
 
-To avoid polling data from the server at a regular interval, the dashboard application subscribes to the resources it is interested to on the server and awaits for an event indicating that the resource has changed.
+To avoid polling data from the server at a regular interval, the dashboard application subscribes to the resources it is interested to on the server and awaits for an event indicating that the resources have changed.
 
-Thus, if you;d like to change the refresh rate of the information on the dashboard(s) connected to a `sys-get` server, you need to configure the server's refresh-rate as follow.
+Thus, if you'd like to change the refresh rate of the information on the dashboard(s) connected to a `sys-get` server, you need to configure the server's refresh-rate as follow.
 
 ```bash
 # Starts an `ipc` server with a refresh rate of `1` second.
@@ -148,7 +152,7 @@ sys-get serve --use-expressify ipc --refresh-rate 1000
 
 ### Starting a remote terminal session
 
-If you have seen the [dashboard](#using-the-dashboard), you have noticed that `sys-get` provides the ability to start and control a terminal session locally or remotely. Below are a few examples associated with different communication methods to interact with a terminal.
+If you have seen the live [dashboard](#using-the-dashboard), you have noticed that `sys-get` provides the ability to start and control a terminal session locally or remotely. Below are a few examples associated with different communication methods to interact directly with a local or remote terminal.
 
 #### Local terminal
 
@@ -160,7 +164,7 @@ sys-get shell
 
 #### IPC terminal
 
-Starts a remote session on the local host.
+Starts a remote session on the local host using `ipc`.
 
 ```bash
 sys-get shell --use-expressify ipc
@@ -168,7 +172,7 @@ sys-get shell --use-expressify ipc
 
 #### MQTT terminal
 
-Starts a remote session on a remote host.
+Starts a remote session on a remote host using `mqtt`.
 
 ```bash
 sys-get shell --use-expressify mqtt --mqtt-opts /path/to/config.json
