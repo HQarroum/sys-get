@@ -75,9 +75,65 @@ sys-get dashboard --refresh-rate 1000
 
 > Note that the retrieval of system metrics can be a heavy process, it is thus recommended to keep the refresh rate equal or above to 1 second.
 
+#### Focus
+
+Some of the widgets mounted on the dashboard grid can earn a focus, it is the case for the *terminal* widget which has the focus by default, as well for the *process* widget. In order to switch the focus between widgets use the **Ctrl+K** shortcut.
+
 ### Using `sys-get` remotely
 
+One of the nicest feature of `sys-get` is to be able to expose a RESTful interface, using the [`expressify`](https://github.com/HQarroum/expressify) framework, on top of any transport mechanism.
 
+#### Exposing metrics over IPC
+
+It is sometimes useful to expose system metrics to another process running on the same host in order to decouple services but also to avoid an unecessary development. To start serving the `sys-get` API over the IPC transport, run the following command.
+
+```bash
+sys-get serve --use-expressify ipc
+```
+
+> Note that the `ipc` transport is selected by default when `sys-get serve` is run, and omitting the `use-expressify` options will have the same effect as the above command.
+
+##### IPC advanced options
+
+The [ipc strategy](https://github.com/HQarroum/expressify-ipc) for Expressify uses local sockets to operate the communication between processes in a cross-platform manner, these sockets can be attributed an `endpoint` which uniquely identifies the server to communicate with, and a `namespace` which is used to partition in topics the communication with an endpoint.
+
+To specify an new endpoint or namespace, you can selectively use the following options. Below is an example where the endpoint is `expressif.server` and the namespace is `foo`.
+
+```bash
+sys-get serve --use-expressify ipc --endpoint expressify.server --namespace foo
+```
+
+This is a useful option if you happen to run multiple instances of a `sys-get serve` on the same host.
+
+##### Using `sys-get` as a client
+
+Once you have a running `sys-get serve` instance running on your host, you can run `sys-get` as a client to query it. Below is an example of how to connect the live dashboard to your server instance.
+
+```bash
+sys-get dashboard --use-expressify ipc
+```
+
+> If you changed the `namespace` or the `endpoint` on your server, you can specify them when running the client using the same `--endpoint` and `--namespace` options which we previously saw when running the server.
+
+#### Exposing metrics over MQTT
+
+The [mqtt strategy](https://github.com/HQarroum/expressify-mqtt) for Expressify uses MQTT topics to operate the communication between a `sys-get` server and a client.
+
+To start serving the `sys-get` API over the MQTT transport, run the following command.
+
+```bash
+sys-get serve --use-expressify mqtt --mqtt-opts /path/to/config.json
+```
+
+The `mqtt-opts` sepcifier indicates to `sys-get` the location of the MQTT description file indicating where certificates are located on your host filesystem, amongst other options.
+
+##### Updating the base topic
+
+When the MQTT strategy is run, it defaults to a communication scheme based on `system` topic. Below is an example of how to update this topic to have another value.
+
+```bash
+sys-get serve --use-expressify mqtt --mqtt-opts /path/to/config.json --topic my/topic
+```
 
 ## Examples
 
@@ -85,5 +141,6 @@ sys-get dashboard --refresh-rate 1000
 
  - The [Expressify](https://github.com/HQarroum/expressify) framework.
  - The [expressify-ipc](https://github.com/HQarroum/expressify-ipc) strategy supporting local sockets as a transport.
+ - The [expressify-mqtt](https://github.com/HQarroum/expressify-mqtt) strategy supporting MQTT as a transport.
  - The [systeminformation]() module.
 
