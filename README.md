@@ -3,7 +3,7 @@
 </p>
 
 # sys-get
-> Portable, system information provider command-line tool.
+> Portable system information provider command-line tool.
 
 [![CodeFactor](https://www.codefactor.io/repository/github/hqarroum/sys-get/badge/master)](https://www.codefactor.io/repository/github/hqarroum/sys-get/overview/master)
 
@@ -135,7 +135,44 @@ When the MQTT strategy is run, it defaults to a communication scheme based on `s
 sys-get serve --use-expressify mqtt --mqtt-opts /path/to/config.json --topic my/topic
 ```
 
-## Examples
+#### A note on server-side refresh rates
+
+To avoid polling data from the server at a regular interval, the dashboard application subscribes to the resources it is interested to on the server and awaits for an event indicating that the resource has changed.
+
+Thus, if you;d like to change the refresh rate of the information on the dashboard(s) connected to a `sys-get` server, you need to configure the server's refresh-rate as follow.
+
+```bash
+# Starts an `ipc` server with a refresh rate of `1` second.
+sys-get serve --use-expressify ipc --refresh-rate 1000
+```
+
+### Starting a remote terminal session
+
+If you have seen the [dashboard](#using-the-dashboard), you have noticed that `sys-get` provides the ability to start and control a terminal session locally or remotely. Below are a few examples associated with different communication methods to interact with a terminal.
+
+#### Local terminal
+
+Starts a local session on the local host.
+
+```bash
+sys-get shell
+```
+
+#### IPC terminal
+
+Starts a remote session on the local host.
+
+```bash
+sys-get shell --use-expressify ipc
+```
+
+#### MQTT terminal
+
+Starts a remote session on a remote host.
+
+```bash
+sys-get shell --use-expressify mqtt --mqtt-opts /path/to/config.json
+```
 
 ## See also
 
