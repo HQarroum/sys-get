@@ -5,7 +5,7 @@
 # sys-get
 > Portable, system information provider command-line tool.
 
-[![Code Climate](https://codeclimate.com/github/HQarroum/expressify-ipc/badges/gpa.svg)](https://codeclimate.com/github/HQarroum/expressify-ipc)
+[![CodeFactor](https://www.codefactor.io/repository/github/hqarroum/sys-get/badge/master)](https://www.codefactor.io/repository/github/hqarroum/sys-get/overview/master)
 
 Current version: **1.0.0**
 
