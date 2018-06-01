@@ -358,18 +358,17 @@ const refreshNetwork = (network) => {
  * the dashboard.
  */
 const render = (results) => {
-  let cpu, memory, processes;
   results.forEach((o) => {
     if (o.command === 'cpu') {
-      refreshCpu(cpu = o.res);
+      refreshCpu(o.res);
     } else if (o.command === 'storage') {
       refreshStorage(o.res);
     } else if (o.command === 'memory') {
-      refreshMemory(memory = o.res);
+      refreshMemory(o.res);
     } else if (o.command === 'network') {
       refreshNetwork(o.res);
     } else if (o.command === 'processes') {
-      refreshProcesses(processes = o.res);
+      refreshProcesses(o.res);
     }
   });
   // Rendering the screen.

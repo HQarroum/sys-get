@@ -7,9 +7,6 @@ const XTerm   = require('./lib/pty/blessed-xterm');
 // Creating a new screen instance.
 const screen = blessed.screen();
 
-// Creating a new grid on the screen.
-const grid = new contrib.grid({ rows: 12, cols: 12, screen });
-
 // Instanciating the client.
 const client = system.factory(program);
 

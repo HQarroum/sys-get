@@ -1,7 +1,6 @@
 const program      = require('commander');
 const Pty          = require('node-pty');
 const iot          = require('aws-iot-device-sdk');
-const os           = require('os');
 const Expressify   = require('../expressify');
 const IpcStrategy  = require('../expressify-ipc');
 const MqttStrategy = require('../expressify-mqtt');
@@ -33,7 +32,7 @@ const rate = program.refreshRate || (10 * 1000);
  * Initiates an MQTT connection.
  * @param {*} opts the options to pass to the MQTT library.
  */
-const connect = (opts) => new Promise((resolve, reject) => {
+const connect = (opts) => new Promise((resolve) => {
   const mqtt = iot.device(opts);
   mqtt.on('connect', () => resolve(mqtt)).on('error', fail);
 });

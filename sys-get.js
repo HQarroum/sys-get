@@ -2,7 +2,6 @@
 
 const _        = require('lodash');
 const program  = require('commander');
-const fs       = require('fs');
 const system   = require('./lib');
 const dump     = system.dump;
 const commands = system.commands();
