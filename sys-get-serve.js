@@ -188,7 +188,7 @@ const start = (server) => {
     const uuid = guid();
     // Set the system `shell`.
     if (!req.payload.shell) {
-      shell = process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe' : 'bash');
+      req.payload.shell = process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe' : 'bash');
     }
     // Creating a new `pty`.
     const pty  = Pty.fork(req.payload.shell, req.payload.args, req.payload.options);
