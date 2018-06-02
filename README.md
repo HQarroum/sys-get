@@ -180,10 +180,20 @@ Starts a remote session on a remote host using `mqtt`.
 sys-get shell --use-expressify mqtt --mqtt-opts /path/to/config.json
 ```
 
+## Notes
+
+### Monitoring CPU Temperature
+
+`sys-get` uses the [systeminformation](https://github.com/sebhildebrandt/systeminformation) module in order to retrieve informations about the system, comprising the temperature of the CPU Cores. Given your system, the temperature retrieval might fail and you'll see `N-A` in place of the temperature value in the dashboard. In this case, please read the [Known Issues](https://github.com/sebhildebrandt/systeminformation#known-issues) section of the `systeminformation` module in order to understand how you can resolve your problem.
+
+### Performance issues
+
+Retrieving system metrics in a short interval might have a performance impact on your overall system, this is why it is advised to keep a *refresh rate* of 1-2 seconds **minimum**.
+
 ## See also
 
  - The [Expressify](https://github.com/HQarroum/expressify) framework.
  - The [expressify-ipc](https://github.com/HQarroum/expressify-ipc) strategy supporting local sockets as a transport.
  - The [expressify-mqtt](https://github.com/HQarroum/expressify-mqtt) strategy supporting MQTT as a transport.
- - The [systeminformation]() module.
+ - The [systeminformation](https://github.com/sebhildebrandt/systeminformation) module.
 
