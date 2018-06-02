@@ -1,6 +1,6 @@
 {
   "name": "sys-get",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A portable system information provider CLI tool.",
   "main": "sys-get.js",
   "bin": {
