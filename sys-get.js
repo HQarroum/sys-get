@@ -9,8 +9,11 @@ const commands = system.commands();
 // Retrieving package informations.
 const { version, description, name } = require('./package.json');
 
-// Argument list.
-let argument = process.argv.slice(2, process.argv.length);
+// Argument list filtering.
+let argument = _.filter(
+  process.argv.slice(2, process.argv.length), (arg) => commands.indexOf(arg) !== -1
+);
+// If no arguments are passed, we query every metrics.
 if (!argument.length) argument = commands;
 
 /**
@@ -42,15 +45,8 @@ program
 const cmdArgs = ['serve', 'dashboard', 'shell'];
 for (let i = 0; i < cmdArgs.length; ++i) {
   if (process.argv.indexOf(cmdArgs[i]) !== -1) {
-    require(`./sys-get-${cmdArgs[i]}`);
-    return;
+    return (require(`./sys-get-${cmdArgs[i]}`));
   }
-}
-
-// Error handling.
-if (_.find(argument, (cmd) => commands.indexOf(cmd) === -1)) {
-  program.outputHelp();
-  process.exit(-1);
 }
 
 // Initializing the client.

@@ -1,7 +1,0 @@
-{
-  "host": "a321muvj58bm4e.iot.eu-central-1.amazonaws.com",
-  "keyPath": "/Users/qarroumh/Documents/Github/sys-get/common/certs/private.pem.key",
-  "certPath": "/Users/qarroumh/Documents/Github/sys-get/common/certs/certificate.pem.crt",
-  "caPath": "/Users/qarroumh/Documents/Github/sys-get/common/certs/root-ca.pem",
-  "region": "eu-central-1"
-}
