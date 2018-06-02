@@ -29,7 +29,7 @@ let opts = {
 
 // Terminal hint.
 let hint = "\r\nWelcome in the remote shell !\r\n" +
-  "Press Q or type `exit` to quit the application, Ctrl+k to change focus between widgets.\r\n\r\n";
+  "Press Q or type `exit` to quit the application.\r\n\r\n";
 
 /**
  * Dumps the given error object on `stderr` and

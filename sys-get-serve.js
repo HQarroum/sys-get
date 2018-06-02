@@ -4,6 +4,9 @@ const iot          = require('aws-iot-device-sdk');
 const Expressify   = require('expressify-js');
 const IpcStrategy  = require('expressify-ipc');
 const MqttStrategy = require('expressify-mqtt');
+const os           = require('os');
+
+// Application dependencies.
 const system       = require('./lib');
 const logger       = require('./lib/middlewares/logger');
 let instance       = null;
@@ -183,6 +186,10 @@ const start = (server) => {
   server.post('/system/pty', (req, res) => {
     // Generating a UUID for the created `pty`.
     const uuid = guid();
+    // Set the system `shell`.
+    if (!req.payload.shell) {
+      shell = process.env.SHELL || (os.platform() === 'win32' ? 'powershell.exe' : 'bash');
+    }
     // Creating a new `pty`.
     const pty  = Pty.fork(req.payload.shell, req.payload.args, req.payload.options);
     // Associating the `uuid` with the `pty`.
