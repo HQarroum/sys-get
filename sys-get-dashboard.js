@@ -262,11 +262,13 @@ const refreshStorage = (storage) => {
     diskReadData.x.shift(); diskReadData.y.shift();
     diskWriteData.x.shift(); diskWriteData.y.shift();
   }
-  // Updating line.
-  diskReadData.x.push(getTime());
-  diskReadData.y.push(storage.ios.rIO_sec);
-  diskWriteData.x.push(getTime());
-  diskWriteData.y.push(storage.ios.wIO_sec);
+  if (storage.ios) {
+    // Updating line.
+    diskReadData.x.push(getTime());
+    diskReadData.y.push(storage.ios.rIO_sec);
+    diskWriteData.x.push(getTime());
+    diskWriteData.y.push(storage.ios.wIO_sec);
+  }
   // Updating the disk throughput graph.
   setLineData([diskReadData, diskWriteData], diskLine);
   // Updating the storage donut.
