@@ -131,7 +131,9 @@ To start serving the `sys-get` API over an MQTT transport, run the following com
 sys-get serve --use-expressify mqtt --mqtt-opts /path/to/config.json
 ```
 
-The `mqtt-opts` sepcifier indicates to `sys-get` the location of the MQTT description file indicating where certificates are located on your host filesystem, amongst other options.
+The `mqtt-opts` sepcifier indicates to `sys-get` the location of the MQTT configuration file indicating where the certificates are located on your host filesystem, amongst other options related to the MQTT server hostname and the MQTT connection.
+
+For more information on what the content of this file should look like, please read its [associated documentation](https://github.com/aws/aws-iot-device-sdk-js#awsiotdeviceoptions) on the `expressify-mqtt` documentation.
 
 ##### Updating the base topic
 
@@ -180,10 +182,20 @@ Starts a remote session on a remote host using `mqtt`.
 sys-get shell --use-expressify mqtt --mqtt-opts /path/to/config.json
 ```
 
+## Notes
+
+### CPU temperature
+
+`sys-get` uses the [systeminformation](https://github.com/sebhildebrandt/systeminformation) module in order to retrieve informations about the system, comprising the temperature of the CPU Cores. Given your system, the temperature retrieval might fail and you'll see `N-A` in place of the temperature value in the dashboard. In this case, please read the [Known Issues](https://github.com/sebhildebrandt/systeminformation#known-issues) section of the `systeminformation` module in order to understand how you can resolve your problem.
+
+### Performance issues
+
+Retrieving system metrics in a short interval might have a performance impact on your overall system, this is why it is advised to keep a *refresh rate* of 1-2 seconds **minimum**.
+
 ## See also
 
  - The [Expressify](https://github.com/HQarroum/expressify) framework.
  - The [expressify-ipc](https://github.com/HQarroum/expressify-ipc) strategy supporting local sockets as a transport.
  - The [expressify-mqtt](https://github.com/HQarroum/expressify-mqtt) strategy supporting MQTT as a transport.
- - The [systeminformation]() module.
+ - The [systeminformation](https://github.com/sebhildebrandt/systeminformation) module.
 
