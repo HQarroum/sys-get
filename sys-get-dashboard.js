@@ -411,7 +411,7 @@ client.prepare()
 
     // Waiting for the `ready` event.
     terminal.once('ready', () => {
-      terminal.write(hint)
+      terminal.write(hint);
       terminal.focus();
       screen.append(terminal);
     });

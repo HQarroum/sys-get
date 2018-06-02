@@ -60,7 +60,7 @@ const factory = {
    */
   createmqtt: function (program) {
     if (!program.mqttOpts) return Promise.reject('[!] --mqtt-opts <path> is required');
-    const opts = require(`${process.cwd()}/${program.mqttOpts}`);
+    const opts = require(program.mqttOpts);
     return connect(opts).then((mqtt) => new Expressify.Server({
         strategy: new MqttStrategy({
           mqtt: mqtt,
