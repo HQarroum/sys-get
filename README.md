@@ -25,6 +25,8 @@ Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 npm install --global sys-get
 ```
 
+> The package `node-pty` which `sys-get` is dependendant on and which is used for terminal emulation requires that `python` and a compiler toolchain comprising `gcc` and `make` are installed on the local machine.
+
 ## Features
 
  - Portable monitoring of system components (CPU, Memory, Processes, Network, Storage, OS).
